@@ -249,11 +249,6 @@
         guess += tile.dataset.letter;
       }
 
-      if (!validWords.includes(guess)) {
-        showMessage("Palavra inválida!");
-        return;
-      }
-
       // Avaliação do palpite em relação à palavra-alvo
       const targetLetters = targetWord.split("");
       const guessLetters = guess.split("");
