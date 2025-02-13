@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Termo Triplo - Jogo de Palavras</title>
+  <style>
+    /* Estilos básicos */
+    body {
+      background-color: #121213;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      margin: 0;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    .boards-container {
+      display: flex;
+      gap: 20px;
+    }
+    .board {
+      display: grid;
+      grid-template-rows: repeat(6, auto);
+      gap: 10px;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: repeat(5, 60px);
+      gap: 5px;
+    }
+    .tile {
+      width: 60px;
+      height: 60px;
+      border: 2px solid #3a3a3c;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 2rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      user-select: none;
+    }
+    /* Cores de avaliação */
+    .tile.correct {
+      background-color: #538d4e;
+      border: none;
+    }
+    .tile.present {
+      background-color: #b59f3b;
+      border: none;
+    }
+    .tile.absent {
+      background-color: #3a3a3c;
+      border: none;
+    }
+    #message {
+      font-size: 1.2rem;
+      height: 1.5rem;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Termo Triplo</h1>
+  <div class="boards-container">
+    <div id="board1" class="board"></div>
+    <div id="board2" class="board"></div>
+    <div id="board3" class="board"></div>
+  </div>
+  <div id="message"></div>
+
+  <script>
+    /*************************************
+     * Configurações e Variáveis
+     *************************************/
+    // Array de palavras válidas (exemplo reduzido; adicione mais conforme necessário)
+    const validWords = [
+      "abrir", "acaso", "achar", "acima", "adiar", "afeto", "agora", "ainda", "amigo",
+      "bater", "beijo", "bravo", "casar", "certo", "doido", "fazer", "fugir", "grato",
+      "homem", "jogar", "livro", "mundo", "saber", "trapo"
+      // ... adicione outras palavras
+    ];
+
+    // Função para escolher uma palavra aleatória
+    function getRandomWord() {
+      return validWords[Math.floor(Math.random() * validWords.length)];
+    }
+
+    // Seleciona três palavras-alvo diferentes
+    let targetWord1 = getRandomWord();
+    let targetWord2;
+    let targetWord3;
+    do {
+      targetWord2 = getRandomWord();
+    } while (targetWord2 === targetWord1);
+    do {
+      targetWord3 = getRandomWord();
+    } while (targetWord3 === targetWord1 || targetWord3 === targetWord2);
+
+    console.log("Palavra-alvo 1:", targetWord1);
+    console.log("Palavra-alvo 2:", targetWord2);
+    console.log("Palavra-alvo 3:", targetWord3);
+
+    const maxRows = 6;
+    const wordLength = 5;
+    let currentRow = 0;
+    let currentTile = 0;
+    let isGameOver = false;
+
+    // Referências aos tabuleiros
+    const board1 = document.getElementById("board1");
+    const board2 = document.getElementById("board2");
+    const board3 = document.getElementById("board3");
+
+    // Criação dinâmica dos 3 tabuleiros
+    for (let i = 0; i < maxRows; i++) {
+      const row1 = document.createElement("div");
+      row1.className = "row";
+      const row2 = document.createElement("div");
+      row2.className = "row";
+      const row3 = document.createElement("div");
+      row3.className = "row";
+
+      for (let j = 0; j < wordLength; j++) {
+        const tile1 = document.createElement("div");
+        tile1.className = "tile";
+        tile1.id = `board1-tile-${i}-${j}`;
+        row1.appendChild(tile1);
+
+        const tile2 = document.createElement("div");
+        tile2.className = "tile";
+        tile2.id = `board2-tile-${i}-${j}`;
+        row2.appendChild(tile2);
+
+        const tile3 = document.createElement("div");
+        tile3.className = "tile";
+        tile3.id = `board3-tile-${i}-${j}`;
+        row3.appendChild(tile3);
+      }
+      board1.appendChild(row1);
+      board2.appendChild(row2);
+      board3.appendChild(row3);
+    }
+
+    /*************************************
+     * Captura de Entrada do Usuário
+     *************************************/
+    document.addEventListener("keydown", (e) => {
+      if (isGameOver) return;
+      const key = e.key;
+      if (key === "Enter") {
+        submitGuess();
+      } else if (key === "Backspace") {
+        deleteLetter();
+      } else if (/^[a-zA-Z]$/.test(key)) {
+        addLetter(key);
+      }
+    });
+
+    // Adiciona a letra digitada aos três tabuleiros
+    function addLetter(letter) {
+      if (currentTile < wordLength && currentRow < maxRows) {
+        letter = letter.toLowerCase();
+        const tile1 = document.getElementById(`board1-tile-${currentRow}-${currentTile}`);
+        const tile2 = document.getElementById(`board2-tile-${currentRow}-${currentTile}`);
+        const tile3 = document.getElementById(`board3-tile-${currentRow}-${currentTile}`);
+        if (tile1 && tile2 && tile3) {
+          tile1.textContent = letter;
+          tile1.dataset.letter = letter;
+          tile2.textContent = letter;
+          tile2.dataset.letter = letter;
+          tile3.textContent = letter;
+          tile3.dataset.letter = letter;
+          currentTile++;
+        }
+      }
+    }
+
+    // Remove a última letra digitada dos três tabuleiros
+    function deleteLetter() {
+      if (currentTile > 0) {
+        currentTile--;
+        const tile1 = document.getElementById(`board1-tile-${currentRow}-${currentTile}`);
+        const tile2 = document.getElementById(`board2-tile-${currentRow}-${currentTile}`);
+        const tile3 = document.getElementById(`board3-tile-${currentRow}-${currentTile}`);
+        if (tile1 && tile2 && tile3) {
+          tile1.textContent = "";
+          delete tile1.dataset.letter;
+          tile2.textContent = "";
+          delete tile2.dataset.letter;
+          tile3.textContent = "";
+          delete tile3.dataset.letter;
+        }
+      }
+    }
+
+    // Envia o palpite e processa em cada um dos tabuleiros
+    function submitGuess() {
+      if (currentTile !== wordLength) {
+        showMessage("Complete a palavra!");
+        return;
+      }
+      
+      let guess = "";
+      // Constrói o palpite (usando board1 como referência)
+      for (let i = 0; i < wordLength; i++) {
+        const tile = document.getElementById(`board1-tile-${currentRow}-${i}`);
+        guess += tile.dataset.letter;
+      }
+      
+      // Processa o palpite para cada tabuleiro
+      processGuessForBoard(guess, targetWord1, "board1");
+      processGuessForBoard(guess, targetWord2, "board2");
+      processGuessForBoard(guess, targetWord3, "board3");
+
+      // Verifica se acertou todas as palavras
+      const board1Solved = (guess === targetWord1);
+      const board2Solved = (guess === targetWord2);
+      const board3Solved = (guess === targetWord3);
+      
+      if (board1Solved && board2Solved && board3Solved) {
+        showMessage("Parabéns! Você acertou as três palavras!");
+        isGameOver = true;
+      } else {
+        currentRow++;
+        currentTile = 0;
+        if (currentRow === maxRows) {
+          showMessage(`Fim de jogo! As palavras eram: ${targetWord1.toUpperCase()}, ${targetWord2.toUpperCase()} e ${targetWord3.toUpperCase()}`);
+          isGameOver = true;
+        }
+      }
+    }
+
+    // Função que avalia o palpite para um tabuleiro específico
+    function processGuessForBoard(guess, targetWord, boardId) {
+      const targetLetters = targetWord.split("");
+      const guessLetters = guess.split("");
+      let evaluation = new Array(wordLength).fill("absent");
+
+      // Primeiro: letras na posição correta
+      for (let i = 0; i < wordLength; i++) {
+        if (guessLetters[i] === targetLetters[i]) {
+          evaluation[i] = "correct";
+          targetLetters[i] = null; // Evita dupla contagem
+        }
+      }
+
+      // Segundo: letras existentes, mas em posição diferente
+      for (let i = 0; i < wordLength; i++) {
+        if (evaluation[i] !== "correct" && targetLetters.includes(guessLetters[i])) {
+          evaluation[i] = "present";
+          targetLetters[targetLetters.indexOf(guessLetters[i])] = null;
+        }
+      }
+
+      // Atualiza os tiles com as classes de avaliação
+      for (let i = 0; i < wordLength; i++) {
+        const tile = document.getElementById(`${boardId}-tile-${currentRow}-${i}`);
+        tile.classList.add(evaluation[i]);
+      }
+    }
+
+    // Exibe uma mensagem para o usuário por 3 segundos
+    function showMessage(msg) {
+      const messageDiv = document.getElementById("message");
+      messageDiv.textContent = msg;
+      setTimeout(() => {
+        messageDiv.textContent = "";
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
