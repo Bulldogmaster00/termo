@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Termo Duplo - Jogo de Palavras</title>
+  <style>
+    /* Estilos básicos */
+    body {
+      background-color: #121213;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      margin: 0;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    .boards-container {
+      display: flex;
+      gap: 20px;
+    }
+    .board {
+      display: grid;
+      grid-template-rows: repeat(6, auto);
+      gap: 10px;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: repeat(5, 60px);
+      gap: 5px;
+    }
+    .tile {
+      width: 60px;
+      height: 60px;
+      border: 2px solid #3a3a3c;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 2rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      user-select: none;
+    }
+    /* Cores de avaliação */
+    .tile.correct {
+      background-color: #538d4e;
+      border: none;
+    }
+    .tile.present {
+      background-color: #b59f3b;
+      border: none;
+    }
+    .tile.absent {
+      background-color: #3a3a3c;
+      border: none;
+    }
+    #message {
+      font-size: 1.2rem;
+      height: 1.5rem;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Termo Duplo</h1>
+  <div class="boards-container">
+    <div id="board1" class="board"></div>
+    <div id="board2" class="board"></div>
+  </div>
+  <div id="message"></div>
+
+  <script>
+    /*************************************
+     * Configurações e Variáveis
+     *************************************/
+    // Array com palavras válidas (aqui você pode colar o seu array completo)
+    const validWords = [
+    "assim", "atrás", "ávido", "azedo", "babar", "bagre", "baixo", 
+      "bando", "banho", "barco", "bardo", "barro", "basta", "bater", 
+      "beijo", "beira", "belos", "bicho", "bielo", "bingo", "bocal", 
+      "bolha", "bolso", "bonde", "borda", "brabo", "braço", "brega", 
+      "breve", "briga", "bruto", "bunda", "burro", "caçar", "cacto", 
+      "café", "caixa", "calma", "calor", "calvo", "cama", "campo", 
+      "canal", "canto", "capaz", "capim", "carro", "casar", "casco", 
+      "casta", "catre", "causa", "ceder", "cegar", "celta", "cenho", 
+      "cerca", "certo", "chato", "chave", "cheio", "choro", "chuva", 
+      "ciclo", "ciente", "claro", "clima", "coisa", "colar", "combo", 
+      "comer", "conta", "corpo", "corte", "cosmo", "cozer", "crédito",
+      "creme", "criar", "crise", "cruel", "cuidar", "culpa", "culto",
+      "curar", "curso", "dador", "dance", "dardo", "deixa", "dengo", 
+      "denso", "dente", "depois", "desde", "deter", "dever", "dia", 
+      "dizer", "dobro", "doce", "dogma", "doido", "dolor", "domar",
+      "dorso", "dose", "douto", "dreno", "duelo", "dueto", "dúvida", 
+      "ébano", "ecoar", "edema", "égide", "eito", "eivar", "eixo", 
+      "eleger", "embora", "emulo", "enfim", "engano", "enjoo",
+      "ente", "épico", "época", "errar", "escol", "esgar", "espia",
+      "estado", "estar", "estio", "estro", "etapa", "exame", "exato",
+      "exijo", "expor", "extra", "falar", "falso", "fardo", "farto", 
+      "fatal", "fator", "fazer", "febra", "fecho", "fedor", "feito",
+      "feliz", "fenda", "ferir", "feroz", "festa", "feudo", "fiar",
+      "fibra", "ficar", "ficha", "fiel", "filho", "firma", "fisco",
+      "fitar", "fixo", "floco", "flora", "fluir", "fluxo", "fobia", 
+      "focar", "fofão", "fogão", "foice", "folga", "folha", "fome", 
+      "fonte", "força", "forma", "forte", "fosso", "foto", "fraco",
+      "frade", "frasco", "freio", "frente", "frieza", "frisar", 
+      "frito", "frota", "fruir", "fugaz", "fugir", "fundo", "furor", 
+      "furto", "fútil", "fuzil", "gabar", "gaita", "gajo", "galho", 
+      "ganho", "garfo", "gasto","gaupe", "gazua", "gelar", "gemer", 
+      "genro", "germe", "gesso", "girar", "glacê", "glico", "glifo",
+      "glote", "gnomo", "golfe", "gosto", "gozar", "graça", "grato",
+      "grau", "grave", "graxo", "grego", "grilo", "grito", "grosso", 
+      "grupo", "gueto", "guisa", "guria", "hábil", "haver", "herói", 
+      "hiato", "hidro", "hífen", "hímen", "homem", "honra", "horas", 
+      "horda", "horto", "hoste", "hotel", "humor", "ícone", "ideia", 
+      "ídolo", "ígneo", "ileso", "imune", "índio", "íngua", "inhame",
+      "início", "injúria", "íntimo", "irado", "isola", "ítalo", "jacto",
+      "jazer", "jegue", "jeito", "jejum", "jogar", "jorro", "jovem", "juízo", 
+      "julho", "junto", "jurar", "justo", "labor", "laico", "lápis",
+      "larva", "lasso", "lazer", "leigo", "leito", "leiva", "leque", 
+      "lerdo", "lesão", "letal", "levar", "lhama", "libra", "ligar", 
+      "limbo", "limpo", "lindo", "líneo", "líquido", "lirar", "lisar", 
+      "lítio", "litor", "livro", "lobby", "local", "logro", "lombo",
+      "longe", "lorde", "lotar", "louco", "louro", "lucro", "lugar", 
+      "lúmen", "lunar", "lutar", "macio", "maçom", "macho", "mágoa",
+      "maior", "malte", "mamar", "mamãe", "manga", "manha", "manso", 
+      "manto", "marca", "marco", "mármore", "marte", "massa", "matar",
+      "mau", "meada", "mecha", "medir", "meigo", "meios", "melão", 
+      "melhor", "menor", "menos", "menta", "mesmo", "mestre", "metro", 
+      "mexer", "mimos", "minar", "miolo", "mirar", "misto", "mito", "moção", "moda", "moeda", "moer", 
+      "molar", "molho", "monte", "moral", "morar", "morde", "morno", "morro", "mossa", "mosto", "motim",
+      "motor", "mouro", "mover", "mucho", "mudar", "muito", "mular", "mundo", "mútuo", "nadar", "naipe", 
+      "nanar", "nariz", "nasal", "natal", "navio", "negar", "neném", "nesse", "nicho", "nível", "nobre",
+      "noção", "noite", "noivo", "nome", "norte", "nosso", "notar", "novo", "nudez", "nuvem", "obeso", "óbice",
+      "obter", "ocaso", "óculo", "odiar", "oeste", "oitão", "olhar", "ombro", "omega", "omissão", "onça", "onde",
+      "ontem", "onze", "opção", "optar", "orçar", "ordem", "órgão", 
+      "orgia", "origem", "órfão", "ósseo", "ossos", "ostra", "outro", "ouvir", "ovino", "pacto", "padre",
+      "pagar", "página", "pai", "paixão", "pajem", "palco", "palma", "pampa", "pano", "papel", "parar",
+      "parca", "parco", "pardo", "parte", "pasmo", "passo", "pasta", "patim", "patrão", "pátrio", "pausa",
+      "peão", "pecar", "peito", "peixe", "pelar", "pena", "penca", "pensar", "pequeno", "perda", "perna", 
+      "perto", "pesar", "peso", "peste", "petiz", "piada", "picar", "pilar", "pilha", "pingo", "pior", "pique",
+      "pisar", "pista", "pivô", "placa", "plano", "pleno", "pluma", "pobre", "poder", "poema", "poeta", "polir",
+      "pomar", "pombo", "ponto", "porão", "porco", "porém", "porta", "posar", "posse", "posto", "pouco", "pouso", 
+      "praga", "praia", "prata", "prato", "praxe", "prazo", "preço", "preto", "primo", "prior", "prole", "prosa", 
+      "prova", "prumo", "psico", "pudor", "pular", "pulha", "pulso", "punga", "punho", "puro", "quase", "quebra", 
+      "queda", "queijo", "quente", "querer", "queto", "quiçá", "quilo", "quitar", "rabio", "ração", "raiva", "rajar", "rampa", "ranço", "rango", "ranho", "rapaz", "rarar", "rasca", "rasgo", "rasto",
+      "rato", "razão", "reais", "reame", "rebel", "recuo", "redor", "refém", "regar", "regra", "rei", "reles", "remar", "remir", "renda", "rente", "reses", "resto", "reter", "retro", "rever", "rezar", 
+      "riacho", "ribas", "ricos", "rifle", "rigor", "rimar", "risco", "risonho", "rival", "rizar", "roçar", "rocha", "rogar", "rolar", "rombo", "rosto", "roubo", "rubro", "ruído", "ruína", "rumar", "rural", "saber", "sabor", "sacar", "sadio", "sagaz", "saiba", "salão", "saldo", "salmo", "salto", "salva", "samba", "sanar", "santo", "sapato", "saque", "sarda", "sarna", "sarro", "satur", "sauna", "século", "seda", "seguro", "seita", "seiva",
+      "seixo", "selar", "selo", "selva", "senda", "senso", "sente", "serão", "sério", "serra", "servo", "sesta", "setor", "sexta", "sigla", "silvo", "simão", "sinal", "sirva", "sismo", "sitio", 
+      "situar", "sobre", "socar", "socio", "sogra", "solto", "somar", "sonho", "sonsa", "sopro", "sorrir", "sorte", "soslaio", "sótão", "soube", "subir", "sujeito", "sujo", "sulco", 
+      "sumir", "super", "surdo", "surto", "susto", "talão", "talco", "talar", "talha", "talo", "tampa", "tanga", "tanto", "tarde", "tarefa", "tarso", "tchau", "tecer", "tecla", "teima", 
+      "telha", "temer", "temor", "templo", "tenaz", "tenda", "tênis", "tenor", "tenso", "terço", "termo", "terno", "terra", "tesão", "tese", "teso", "testa", "texto", "tíbio", "tigre",
+      "timão", "tinto", "tique", "tirar", "titã", "tocar", "tocha", "todas", "todos", "toldo", "tomar", "tombo", "tonel", "tonto", "topar", "toque", "torpe", "torrão", "torto", "tosar",
+      "tosco", "touro", "traga", "trago", "trair", "traje", "trama", "trapo", "trato", "trava", "trazer", "treco", "trema", "tremo", "tribo", "trigo", "trino", "tripa", "troca", "troco",
+      "trono", "tropa", "trova", "truta", "trufa", "túnel", "turba", "turco", "turma", "turvar", "tutor", "ufano", "úmido", "unção", "único", "unir", "urgir", "urrar", "urso", "urubu", 
+      "usado", "usual", "útero", "vacas", "vagar", "vaiar", "valer", "valor", "vapor", "varão", "vasto", "vazar", "veado", "vedar", "veiga", "veio", "velar", "velho", "veloz", "vemos", 
+      "venal", "venda", "vento", "verão", "verba", "verbo", "verde", "versar", "verso", "vesgo", "veste", "vetar", "vexar", "vazio", "vezes", "viajar", "vibrar", "vício", "vidar", "vidro", 
+      "vigia", "vigor", "vilão", "vimos", "vinco", "vínculo", "vingar", "vinho", "virar", "viril", "virtude", "visão", "visar", "visco", "visse", "vista", "vital", "vitro", "viúva", "viver", 
+      "voador", "vocal", "vodca", "vogal", "volta", "voraz", "vosso", "votar", "vovó", "vulgo", "vulto", "xarope", "xerox", "zanga", "zebra", "zelar", "zumbi", "abril", "achar", "adeus", "amiga", "amigo", "andar", "antes", "arroz", "banho", 
+      "banco", "bater", "baixo", "beijo", "bravo", "bomba", "carta", "casal", "certo", "cinza", "clima", "comum", "corpo", "corte", "conto", "criar", "chuva", "custa", "dizer", "dados", "deixa", "dever", "denso", "digno", "estar", "exato", "errar", "fazer", "feliz", "falar", "fundo", "firme", "farto", "frota", "ganha", "grato", "gosto", "gozar", "gente", "haver", "homem", "igual", "ideia", "irmao", "icone", "inato", "jogar", "jovem", "junto", "karma", "livro", "lugar", "limpo", "lento", "legal", "levar", "ligar", "lirio", "mundo", "mesmo", "matar", "morar", "maior", "multa", "medir", "marca", "magia", "manso", "menos", "manos", "muito", "nunca", "nasce", "nobre", "obter", "outro", "obvio", "ordem", "poder", "ponto", "porta", "pobre", "parar", "pular", "pegar", "perto", "pleno", "passe", "quero", "quase", "razao", "risco", "rosto", "ruina", "remar", "rimar", "rural", "saber", "santo", "salvo", "serio", "sexta", "sinto", "sonho", "sobra", "susto", "suave", "tempo", "tanto", "tchau", "tocar", "tomar", "trago", "troca", "unido", "umido", "usual", "viver", "valor", "verde", "votar", "vazio", "velho", "venda", "vista", "virar", "vozes", "visto", "xampu", "xisto", "xerox", "zumbi", "zelar", "agora", "amora", "brega", "calma", "certa", "clara", "crise", "cobre", "dobra", "dieta", "duelo", "enfim", "exige", "etapa", "forma", "ficha", "fugir", "geral", "grave", "grito", "honra", "ideal", "idoso", "isola", "jeito", "junta", "linda", "lutar", "leite", "lapso", "mansa", "morte", "mudar", "mudou", "mecha", "notar", "nervo", "nasal", "obeso", "olhar", "otima", "prazo", "puder", "pinta", "pouco", "rever", "ruivo", "sente", "seita", "sacro", "salas", "socar", "troco", "tenso", "tinta", "ungir", "vagar", "volta", "vibra", "zebra", "acusa", "adiar", "afiar", "ajuda", "apara", "aonde", "ardor", "atroz", "botar", "brisa", "ceder", "chama", "comer", "conta", "canta", "cegar", "dores", "danos", "exibe", "evita", "edita", "fugiu", "fluir", "finge", "fixar", "ganho", "grava", "guiar", "havia", "houve", "irado", "iscar", "julga", "jazia", "lance", "louco", "lacre", "morna", "mimar", "miolo", "nasci", "notou", "ocupa", "olhou", "pensa", "podia", "puser", "perde", "pilha", "peixe", "prato", "quica", "rende", "rasga", "reina", "rodam", "rifar", "senta", "serve", "sonha", "saiam", "tecla", "tende", "tinha", "truta", "urgir", "ultra", "varia", "vital", "vigor", "visar", "vinca", "valer", "vapor", "velar", "viste", "zerar", "zanga", "zorro", "ardil", "vulto", "epico", "sutil", "surto", "apuro", "feudo", "fardo", "fiado", "fraco", "vasto", "tarde", "breve", "longo", "plena", "duplo", "agudo", "sadio", "roupa", "primo", "prima", "socio", "hotel", "olhos", "calor", "fruta", "flora", "fauna", "bolsa", "sinal", "custo", "aceno", "oliva", "piano", "coral", "aviso", "praia", "viola", "festa", "julho", "setor", "dorso", "ciclo", "salve", "horda", "pardo", "selva", "bicho", "fenda", "porto", "venal", "rocha", "minas", "natal", "gesso", "sabor", "macho", "exame", "bolso", "trama", "pagar", "servo", "cheio", "podem", "cedro", "mover",
+      "riram", "repor", "podar", "macia", "sumir", "expor", "gerir", "deram", "uivar", "salar", "feroz", "doido", "teima", "calmo", "fugaz", "raros", "parvo", "tosco", "agita", "avida", "audaz""sagaz", "âmago", "negro", "termo", "mexer", "nobre", "senso", "paixão", "ética", "algo", "plena", "fazer", "assim", "tênue", "mútuas", "sobre", "vigor", "aquém", "seção", "sutil", "poder", "porém", "fosse", "sanar", "ideia", "cerne", "audaz", "moral", "inato", "desde", "quiçá", "muito", "justa", "honra", "sonho", "torpe", "razão", "amigo", "ícone", "fútil", "etnia", "égide", "anexo", "tange", "dengo", "lapso", "haver", "expor", "então", "tempo", "boçal", "seara", "mútuo", "hábil", "casal", "saber", "ávido", "graça", "ardil", "óbice", "dizer", "pesar", "xibiu", "dever", "causa", "estar", "sendo", "tenaz", "pária", "brado", "coser", "ainda", "genro", "crivo", "temor", "posse", "comum", "prole", "ápice", "ânimo", "assaz", "corja", "ceder", "detém", "pauta", "fugaz", "ânsia", "censo", "culto", "digno", "atroz", "mundo", "forte", "vulgo", "gleba", "vínculo", "mesmo", "saúde", "criar", "cozer", "valha", "revés", "todos", "denso", "jeito", "pudor", "dogma", "neném", "louco", "atrás", "regra", "ordem", "limbo", "mercê", "feliz", "clava", "pedir", "homem", "importa", "banal", "round", "usura", "ajuda", "justiça", "coisa", "sábios", "forma", "servo", "legal", "falar", "prosa", "certo", "tenro", "presa", "desse", "pífio", "posso", "falso", "cunho", "vendo", "devir", "viril", "herói", "ontem", "fácil", "manso", "valor", "visar", "meiga", "pode", "ser", "linda", "ébrio", "mágoa", "acaso", "reaça", "guisa", "fluir", "afago", "ímpio", "platô", "lugar", "temer", "garbo", "abrir", "praxe", "obter", "gerar", "união", "afins", "burro", "óbvio", "matiz", "cisma", "bruma", "pleno", "êxodo", "crise", "vênia", "tédio", "fluxo", "senil", "havia", "ritmo", "morte", "álibi", "levar", "enfim", "olhar", "tomar", "casta", "visão", "gênio", "prumo", "brega", "parvo", "vital", "ouvir", "cabal", "bravo", "reles", "favor", "falta", "calma", "parco", "pulha", "vivaz", "outro", "reter", "tecer", "sábia", "tendo", "terra", "ameno", "valia", "viver", "laico", "grato", "força", "único", "passo", "noção", "carma", "achar", "possa", "nicho", "ranço", "rever", "pobre", "papel", "noite", "fazer", "rogar", "nosso", "prime", "farsa", "fardo", "ativo", "dúbio", "fator", "coeso", "óbito", "épico", "selar", "anelo", "claro", "sinto", "citar", "líder", "leigo", "sesta", "cisão", "sonso", "deter", "cigano", "cesta", "velho", "atuar", "pressa", "adiar", "tende", "gente", "revel", "humor", "vazio", "ficar", "sulco", "ideal", "árduo", "fonte", "vemos", "marco", "ponto", "igual", "labor", "exato", "feixe", "amplo", "terno", "senão", "remir", "lavra", "hiato", "cauda", "capaz", "tanto", "débil", "ciclo", "relva", "ótica", "gesto", "inata", "varão", "coçar", "imune", "toada", "vacinal", "sonsa", "chuva", "raiva", "pouco", "apoio", "caçar", "vimos", "velar", "série", "algum", "xeque", "fará", "horda", "feito", "fusão", "advém", "leito", "entre", "coesa", "sente", "probo", "carro", "doido", "minha", "cruel", "trama", "frase", "anuir", "torço", "brisa", "lazer", "ímpar", "verso", "sorte", "chata", "rigor", "massa", "botar", "prece", "blasé", "maior", "pegar", "dorso", "seita", "signo", "fauna", "movimento", "preso", "furor", "covil", "credo", "casto", "livro", "flora", "morar", "vetor", "liame", "plano", "comer", "adeus", "saiba", "ocaso", "dócil", "senda", "praia", "agora", "peste", "nunca", "pecha", "faina", "áurea", "ambos", "fato", "árido", "setor", "manha", "ardor", "peixe", "mudar", "vírus", "visse", "meses", "parte", "rezar", "salvo", "antro", "vulto", "beata", "aceso", "pajem", "vasto", "risco", "breve", "saída", "junto", "morro", "ótimo", "campo", "avaro", "grupo", "banzo", "estão", "sinal", "reger", "prado", "antes", "anais", "áureo", "andar", "lenda", "segue", "contará", "opção", "birra", "acima", "chulo", "fugir", "oxalá", "motim", "leite", "rapaz", "verbo", "vilão", "festa", "brava", "nação", "fruir", "treta", "parar", "texto", "tirar", "ídolo", "traga", "fitar", "índio", "jazia", "puxa", "reino", "tenso", "dirigir", "prazo", "alude", "tosco", "átrio", "norma", "filho", "prova", "exame", "turba", "época", "bônus", "preto", "bando", "corpo", "malta", "voraz", "arcar", "aceso", "cheio", "sarça", "aonde", "manhã", "psico", "sinhá", "anciã", "avião", "crimes", "liga", "quase", "fatal", "venal", "nossa", "certa", "praga", "magia", "logro", "dessa", "cota", "nível", "afora", "fixar", "longe", "apego", "oásis", "mente", "pompa", "messe", "coito", "nódoa", "sumir", "lidar", "perda", "para", "alado", "jirau", "soldo", "caixa", "parca", "sexta", "tinha", "fraco", "livre", "verve", "vezes", "lindo", "apelo", "glosa", "firme", "porta", "solto", "grave", "bater", "opaco", "virão", "cânon", "faixa", "turva", "astro", "salve", "sabia", "abriu", "irmão", "doído", "trupe", "fenda", "besta", "atual", "exijo", "navio", "grata", "supra", "elite"
+    ];
+
+    // Função para escolher uma palavra aleatória
+    function getRandomWord() {
+      return validWords[Math.floor(Math.random() * validWords.length)];
+    }
+
+    // Seleciona duas palavras-alvo diferentes
+    let targetWord1 = getRandomWord();
+    let targetWord2;
+    do {
+      targetWord2 = getRandomWord();
+    } while (targetWord2 === targetWord1);
+
+    console.log("Palavra-alvo 1:", targetWord1);
+    console.log("Palavra-alvo 2:", targetWord2);
+
+    const maxRows = 6;
+    const wordLength = 5;
+    let currentRow = 0;
+    let currentTile = 0;
+    let isGameOver = false;
+
+    // Referências aos tabuleiros
+    const board1 = document.getElementById("board1");
+    const board2 = document.getElementById("board2");
+
+    // Cria os dois tabuleiros dinamicamente
+    for (let i = 0; i < maxRows; i++) {
+      const row1 = document.createElement("div");
+      row1.className = "row";
+      const row2 = document.createElement("div");
+      row2.className = "row";
+      for (let j = 0; j < wordLength; j++) {
+        const tile1 = document.createElement("div");
+        tile1.className = "tile";
+        tile1.id = `board1-tile-${i}-${j}`;
+        row1.appendChild(tile1);
+
+        const tile2 = document.createElement("div");
+        tile2.className = "tile";
+        tile2.id = `board2-tile-${i}-${j}`;
+        row2.appendChild(tile2);
+      }
+      board1.appendChild(row1);
+      board2.appendChild(row2);
+    }
+
+    /*************************************
+     * Captura de Entrada do Usuário
+     *************************************/
+    document.addEventListener("keydown", (e) => {
+      if (isGameOver) return;
+      const key = e.key;
+      if (key === "Enter") {
+        submitGuess();
+      } else if (key === "Backspace") {
+        deleteLetter();
+      } else if (/^[a-zA-Z]$/.test(key)) {
+        addLetter(key);
+      }
+    });
+
+    // Adiciona a letra digitada aos dois tabuleiros
+    function addLetter(letter) {
+      if (currentTile < wordLength && currentRow < maxRows) {
+        letter = letter.toLowerCase();
+        const tile1 = document.getElementById(`board1-tile-${currentRow}-${currentTile}`);
+        const tile2 = document.getElementById(`board2-tile-${currentRow}-${currentTile}`);
+        if (tile1 && tile2) {
+          tile1.textContent = letter;
+          tile1.dataset.letter = letter;
+          tile2.textContent = letter;
+          tile2.dataset.letter = letter;
+          currentTile++;
+        }
+      }
+    }
+
+    // Remove a última letra digitada dos dois tabuleiros
+    function deleteLetter() {
+      if (currentTile > 0) {
+        currentTile--;
+        const tile1 = document.getElementById(`board1-tile-${currentRow}-${currentTile}`);
+        const tile2 = document.getElementById(`board2-tile-${currentRow}-${currentTile}`);
+        if (tile1 && tile2) {
+          tile1.textContent = "";
+          delete tile1.dataset.letter;
+          tile2.textContent = "";
+          delete tile2.dataset.letter;
+        }
+      }
+    }
+
+    // Envia o palpite e processa em ambos os tabuleiros
+    function submitGuess() {
+      if (currentTile !== wordLength) {
+        showMessage("Complete a palavra!");
+        return;
+      }
+      
+      let guess = "";
+      // Constrói o palpite com base no que foi digitado (usa board1 como referência)
+      for (let i = 0; i < wordLength; i++) {
+        const tile = document.getElementById(`board1-tile-${currentRow}-${i}`);
+        guess += tile.dataset.letter;
+      }
+
+        // Verifica se o palpite é válido
+      if (!validWords.includes(guess)) {
+        showMessage("Palavra inválida!");
+        return;
+      }
+      
+      // Processa o palpite para cada tabuleiro
+      processGuessForBoard(guess, targetWord1, "board1");
+      processGuessForBoard(guess, targetWord2, "board2");
+
+      // Verifica se ambas as palavras foram acertadas
+      const board1Solved = (guess === targetWord1);
+      const board2Solved = (guess === targetWord2);
+      
+      if (board1Solved && board2Solved) {
+        showMessage("Parabéns! Você acertou as duas palavras!");
+        isGameOver = true;
+      } else {
+        currentRow++;
+        currentTile = 0;
+        if (currentRow === maxRows) {
+          showMessage(`Fim de jogo! As palavras eram: ${targetWord1.toUpperCase()} e ${targetWord2.toUpperCase()}`);
+          isGameOver = true;
+        }
+      }
+    }
+
+    // Função que avalia o palpite para um dos tabuleiros
+    function processGuessForBoard(guess, targetWord, boardId) {
+      const targetLetters = targetWord.split("");
+      const guessLetters = guess.split("");
+      let evaluation = new Array(wordLength).fill("absent");
+
+      // Primeiro: letras na posição correta
+      for (let i = 0; i < wordLength; i++) {
+        if (guessLetters[i] === targetLetters[i]) {
+          evaluation[i] = "correct";
+          targetLetters[i] = null; // Evita contagem dupla
+        }
+      }
+
+      // Segundo: letras existentes, mas na posição errada
+      for (let i = 0; i < wordLength; i++) {
+        if (evaluation[i] !== "correct" && targetLetters.includes(guessLetters[i])) {
+          evaluation[i] = "present";
+          targetLetters[targetLetters.indexOf(guessLetters[i])] = null;
+        }
+      }
+
+      // Atualiza os tiles com as classes de avaliação
+      for (let i = 0; i < wordLength; i++) {
+        const tile = document.getElementById(`${boardId}-tile-${currentRow}-${i}`);
+        tile.classList.add(evaluation[i]);
+      }
+    }
+
+    // Exibe uma mensagem para o usuário por 3 segundos
+    function showMessage(msg) {
+      const messageDiv = document.getElementById("message");
+      messageDiv.textContent = msg;
+      setTimeout(() => {
+        messageDiv.textContent = "";
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
