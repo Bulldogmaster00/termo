@@ -245,7 +245,13 @@
         const tile = document.getElementById(`tile-${currentRow}-${i}`);
         guess += tile.dataset.letter;
       }
-
+      
+ // Verifica se o palpite é válido
+      if (!validWords.includes(guess)) {
+        showMessage("Palavra inválida!");
+        return;
+      }
+      
       // Avaliação do palpite em relação à palavra-alvo
       const targetLetters = targetWord.split("");
       const guessLetters = guess.split("");
